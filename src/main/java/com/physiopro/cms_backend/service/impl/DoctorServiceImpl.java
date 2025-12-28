@@ -20,6 +20,15 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public Doctor findByUserId(UUID uuid) {
-        return doctorRepository.findByUserId(uuid).orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));;
+        return doctorRepository.findByUserId(uuid).orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
+    }
+
+    @Override
+    public void createDoctorProfile(User user) {
+        Doctor doctor = new Doctor();
+        doctor.setUser(user);
+        doctor.setAvailable(true); // Default to available
+        doctor.setSpecialization("General Physician"); // Default
+        doctorRepository.save(doctor);
     }
 }

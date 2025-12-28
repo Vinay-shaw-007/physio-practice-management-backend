@@ -4,6 +4,7 @@ import com.physiopro.cms_backend.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -14,6 +15,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true)
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
@@ -21,7 +23,9 @@ public class WebSecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource; // Defined in AppConfig or here
 
     private static final String[] PUBLIC_ROUTES = {
-            "/api/auth/**",
+            "/api/auth/signup",
+            "/api/auth/login",
+            "/api/auth/refresh",
             "/v3/api-docs/**",
             "/swagger-ui/**"
     };

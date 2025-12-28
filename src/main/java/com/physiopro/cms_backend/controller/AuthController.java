@@ -13,7 +13,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -29,7 +29,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterRequest request) {
-        return new ResponseEntity<>(authService.register(request), HttpStatus.CREATED);
+        return new ResponseEntity<>(authService.registerPatient(request), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -55,18 +55,14 @@ public class AuthController {
         // 4. Return Access Token & User Info
         // Note: You might want to fetch the UserDto separately if LoginResponse expects it
         // For now, let's assume LoginResponse just needs the token, or you can fetch the user dto here.
-        User user = userService.getUserByEmail(request.getEmail());
+        User user = userService.findByEmail(request.getEmail());
         return ResponseEntity.ok(new LoginResponse(accessToken, modelMapper.map(user, UserDto.class)));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDto> getCurrentUser(Authentication authentication) {
-        // Spring Security injects the authenticated User object (Principal)
-        User user = (User) authentication.getPrincipal();
-
-        // Fetch the full profile using the email from the token
-        assert user != null;
-        return ResponseEntity.ok(authService.getMyProfile(user.getEmail()));
+    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal User user) {
+        // Pass the whole object to the service
+        return ResponseEntity.ok(authService.getMyProfile(user));
     }
 
     @PostMapping("/refresh")

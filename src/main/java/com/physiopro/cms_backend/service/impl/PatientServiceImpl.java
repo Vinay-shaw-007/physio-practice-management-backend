@@ -22,4 +22,12 @@ public class PatientServiceImpl implements PatientService {
     public Patient findByUserId(UUID uuid) {
         return patientRepository.findByUserId(uuid).orElseThrow(() -> new ResourceNotFoundException("Patient profile not found"));
     }
+
+    @Override
+    public void createPatientProfile(User user) {
+        Patient patient = new Patient();
+        patient.setUser(user);
+        // Set default values if needed (e.g., medical history placeholder)
+        patientRepository.save(patient);
+    }
 }

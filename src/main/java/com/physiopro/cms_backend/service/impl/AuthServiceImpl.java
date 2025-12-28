@@ -4,7 +4,6 @@ import com.physiopro.cms_backend.dto.DoctorDto;
 import com.physiopro.cms_backend.dto.PatientDto;
 import com.physiopro.cms_backend.dto.RegisterRequest;
 import com.physiopro.cms_backend.dto.UserDto;
-import com.physiopro.cms_backend.exceptions.ResourceNotFoundException;
 import com.physiopro.cms_backend.model.Doctor;
 import com.physiopro.cms_backend.model.Patient;
 import com.physiopro.cms_backend.model.Role;
@@ -53,19 +52,45 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public UserDto register(RegisterRequest request) {
+    public UserDto registerPatient(RegisterRequest request) {
+        // 1. Validation
         if (userService.existsByEmail(request.getEmail())) {
             throw new RuntimeException("User already exists");
         }
 
+        // 2. Create User (FORCE ROLE = PATIENT)
         User user = modelMapper.map(request, User.class);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole() != null ? request.getRole() : Role.PATIENT);
+        user.setRole(Role.PATIENT); // <--- Strict Enforcement
         user.setActive(true);
 
         User savedUser = userService.save(user);
 
-        // Use ModelMapper to convert back to DTO
+        // 3. Create Patient Profile
+        patientService.createPatientProfile(savedUser);
+
+        return modelMapper.map(savedUser, UserDto.class);
+    }
+
+    @Override
+    @Transactional
+    public UserDto onboardDoctor(RegisterRequest request) {
+        // 1. Validation
+        if (userService.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("User already exists");
+        }
+
+        // 2. Create User (FORCE ROLE = DOCTOR)
+        User user = modelMapper.map(request, User.class);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.DOCTOR); // <--- Strict Enforcement
+        user.setActive(true);
+
+        User savedUser = userService.save(user);
+
+        // 3. Create Doctor Profile
+        doctorService.createDoctorProfile(savedUser);
+
         return modelMapper.map(savedUser, UserDto.class);
     }
 
@@ -82,11 +107,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserDto getMyProfile(String email) {
-        // 1. Find the Base User
-        User user = userService.getUserByEmail(email);
+    public UserDto getMyProfile(User user) {
 
-        // 2. Return the Specific Profile based on Role
+        // 1. Return the Specific Profile based on Role using user.getId()
         if (user.getRole() == Role.DOCTOR) {
             Doctor doctor = doctorService.findByUserId(user.getId());
             // Maps Doctor Entity -> DoctorDto (includes User fields via MapperConfig)

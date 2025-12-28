@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface DoctorService {
     Doctor findByUserId(UUID uuid);
+    void createDoctorProfile(User user);
 }
